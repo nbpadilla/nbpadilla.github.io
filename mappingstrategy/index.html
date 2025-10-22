@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP BTP CPI Mapping Strategy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #475569;
+        }
+
+        .strategy-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            color: white;
+        }
+
+        .card-header.emerald {
+            background: linear-gradient(to right, #10b981, #0d9488);
+        }
+
+        .card-header.blue {
+            background: linear-gradient(to right, #3b82f6, #4f46e5);
+        }
+
+        .card-header.amber {
+            background: linear-gradient(to right, #f59e0b, #ea580c);
+        }
+
+        .card-header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .icon-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .icon {
+            width: 2rem;
+            height: 2rem;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .strategy-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .card-body {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .section h3 {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section ul {
+            list-style: none;
+        }
+
+        .section li {
+            font-size: 0.875rem;
+            color: #475569;
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .bullet {
+            color: #94a3b8;
+        }
+
+        .decision-framework {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .decision-framework h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .decision-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .decision-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .decision-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .decision-item {
+            background: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .decision-question {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .decision-answer {
+            font-size: 0.875rem;
+            color: #059669;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .best-practices {
+            background: linear-gradient(to right, #334155, #1e293b);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            color: white;
+        }
+
+        .best-practices h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .practices-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .practices-section h3 {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .practices-section.dos h3 {
+            color: #6ee7b7;
+        }
+
+        .practices-section.donts h3 {
+            color: #fcd34d;
+        }
+
+        .practices-section ul {
+            list-style: none;
+        }
+
+        .practices-section li {
+            font-size: 0.875rem;
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chevron-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .chevron-small {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>SAP BTP CPI Mapping Strategy</h1>
+            <p>Prioritized Approach for Integration Flows</p>
+        </div>
+
+        <!-- Strategy Cards -->
+        <div id="strategies"></div>
+
+        <!-- Decision Framework -->
+        <div class="decision-framework">
+            <h2>Decision Framework</h2>
+            <div class="decision-grid" id="decisions"></div>
+        </div>
+
+        <!-- Best Practices -->
+        <div class="best-practices">
+            <h2>Best Practices</h2>
+            <div class="practices-grid">
+                <div class="practices-section dos">
+                    <h3>Do's</h3>
+                    <ul>
+                        <li><span>✓</span><span>Start with Groovy for new complex integrations</span></li>
+                        <li><span>✓</span><span>Document all custom scripts thoroughly</span></li>
+                        <li><span>✓</span><span>Implement error handling in all mappings</span></li>
+                        <li><span>✓</span><span>Use XSLT for standard XML transformations</span></li>
+                        <li><span>✓</span><span>Consider performance implications</span></li>
+                    </ul>
+                </div>
+                <div class="practices-section donts">
+                    <h3>Don'ts</h3>
+                    <ul>
+                        <li><span>✗</span><span>Avoid Graphical for complex business logic</span></li>
+                        <li><span>✗</span><span>Don't mix multiple mapping types unnecessarily</span></li>
+                        <li><span>✗</span><span>Avoid hardcoding values in mappings</span></li>
+                        <li><span>✗</span><span>Don't skip testing for edge cases</span></li>
+                        <li><span>✗</span><span>Avoid undocumented complex transformations</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const strategies = [
+            {
+                priority: 1,
+                name: "Groovy Script",
+                icon: "code",
+                color: "emerald",
+                borderColor: "#10b981",
+                chevronColor: "#10b981",
+                when: [
+                    "Complex business logic and transformations",
+                    "Dynamic field mapping requirements",
+                    "Custom data validation and enrichment",
+                    "Integration with external libraries/APIs",
+                    "Performance-critical operations"
+                ],
+                benefits: [
+                    "Maximum flexibility and control",
+                    "Reusable functions and code libraries",
+                    "Easy debugging and unit testing",
+                    "Better version control integration",
+                    "Optimal performance for complex logic"
+                ],
+                considerations: [
+                    "Requires development skills",
+                    "Needs proper documentation",
+                    "Code review processes recommended"
+                ]
+            },
+            {
+                priority: 2,
+                name: "XSLT Mapping",
+                icon: "file-code",
+                color: "blue",
+                borderColor: "#3b82f6",
+                chevronColor: "#3b82f6",
+                when: [
+                    "XML-to-XML transformations",
+                    "Standard message format conversions",
+                    "Hierarchical data restructuring",
+                    "Template-based transformations",
+                    "Legacy system integration requirements"
+                ],
+                benefits: [
+                    "Native XML processing capability",
+                    "Industry-standard approach",
+                    "Good for structured transformations",
+                    "Separate presentation from logic",
+                    "Portable across platforms"
+                ],
+                considerations: [
+                    "Limited to XML formats",
+                    "Can be complex for intricate logic",
+                    "Harder to debug than Groovy",
+                    "Learning curve for XSLT syntax"
+                ]
+            },
+            {
+                priority: 3,
+                name: "Graphical Mapping",
+                icon: "workflow",
+                color: "amber",
+                borderColor: "#f59e0b",
+                chevronColor: "#f59e0b",
+                when: [
+                    "Simple 1:1 field mappings",
+                    "Rapid prototyping/POC scenarios",
+                    "Non-technical user maintenance",
+                    "Basic data type conversions",
+                    "Quick fixes for simple mappings"
+                ],
+                benefits: [
+                    "Visual representation of mapping",
+                    "Low-code/no-code approach",
+                    "Quick setup for simple cases",
+                    "Easy to understand for business users"
+                ],
+                considerations: [
+                    "Limited flexibility for complex logic",
+                    "Performance concerns with large datasets",
+                    "Difficult to maintain for complex scenarios",
+                    "Limited reusability across integrations",
+                    "Version control challenges"
+                ]
+            }
+        ];
+
+        const decisionCriteria = [
+            { question: "Is the transformation complex with business logic?", answer: "Use Groovy Script" },
+            { question: "Is it pure XML-to-XML transformation?", answer: "Consider XSLT" },
+            { question: "Is it a simple 1:1 field mapping?", answer: "Graphical may suffice" },
+            { question: "Do you need high performance?", answer: "Use Groovy Script" },
+            { question: "Is future maintainability critical?", answer: "Avoid Graphical for complex cases" }
+        ];
+
+        const iconSVGs = {
+            code: '<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
+            'file-code': '<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="10 13 8 15 10 17"></polyline><polyline points="14 13 16 15 14 17"></polyline></svg>',
+            workflow: '<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"></rect><rect x="15" y="3" width="6" height="6" rx="1"></rect><rect x="9" y="15" width="6" height="6" rx="1"></rect><path d="M6 9v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9"></path></svg>',
+            chevron: '<svg xmlns="http://www.w3.org/2000/svg" class="chevron-icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+        };
+
+        function renderStrategies() {
+            const container = document.getElementById('strategies');
+            
+            strategies.forEach(strategy => {
+                const card = document.createElement('div');
+                card.className = 'strategy-card';
+                card.style.borderLeftColor = strategy.borderColor;
+                
+                card.innerHTML = `
+                    <div class="card-header ${strategy.color}">
+                        <div class="card-header-content">
+                            <div class="icon-container">
+                                ${iconSVGs[strategy.icon]}
+                            </div>
+                            <div style="flex: 1;">
+                                <span class="priority-badge">Priority ${strategy.priority}</span>
+                                <h2 class="strategy-name">${strategy.name}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="section">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="chevron-icon" style="color: #10b981;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                When to Use
+                            </h3>
+                            <ul>
+                                ${strategy.when.map(item => `
+                                    <li>
+                                        <span class="bullet">•</span>
+                                        <span>${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="chevron-icon" style="color: #3b82f6;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                Key Benefits
+                            </h3>
+                            <ul>
+                                ${strategy.benefits.map(item => `
+                                    <li>
+                                        <span class="bullet">•</span>
+                                        <span>${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="chevron-icon" style="color: #f59e0b;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                Considerations
+                            </h3>
+                            <ul>
+                                ${strategy.considerations.map(item => `
+                                    <li>
+                                        <span class="bullet">•</span>
+                                        <span>${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function renderDecisions() {
+            const container = document.getElementById('decisions');
+            
+            decisionCriteria.forEach(criteria => {
+                const item = document.createElement('div');
+                item.className = 'decision-item';
+                item.innerHTML = `
+                    <p class="decision-question">${criteria.question}</p>
+                    <p class="decision-answer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="chevron-small" viewBox="0 0 24 24" style="stroke: #059669;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        ${criteria.answer}
+                    </p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        renderStrategies();
+        renderDecisions();
+    </script>
+</body>
+</html>
