@@ -11,8 +11,20 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-4xl mx-auto">
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex flex-col">
+
+    <!-- Back Button -->
+    <div class="max-w-4xl mx-auto w-full mb-4">
+        <button onclick="window.history.back()" class="flex items-center text-indigo-600 hover:text-indigo-800 transition duration-150 p-2 rounded-lg hover:bg-white/50">
+            <!-- Icon for Back/Home -->
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span class="font-medium">Back</span>
+        </button>
+    </div>
+
+    <div class="max-w-4xl mx-auto w-full flex-grow">
         <div class="bg-white rounded-lg shadow-xl p-8">
             <div class="flex items-center gap-3 mb-6">
                 <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,6 +97,13 @@
             <div id="result" class="mt-8 hidden"></div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 py-4 text-center text-sm text-gray-600 w-full">
+        <p class="max-w-4xl mx-auto border-t pt-4 border-gray-200">
+            <span class="font-semibold text-gray-700">Privacy Notice:</span> No data is saved or stored. This calculator is entirely client-side and free to use.
+        </p>
+    </footer>
 
     <script>
         const servicePercentages = {
