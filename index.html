@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Tools Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .tool-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .tool-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .tool-description {
+            font-size: 0.95rem;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Integration Tools Hub</h1>
+            <p class="subtitle">Select a tool to get started</p>
+        </header>
+
+        <div class="tools-grid">
+            <a href="/estimator" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <div class="tool-title">Estimator</div>
+                <div class="tool-description">Calculate and estimate project metrics and values</div>
+            </a>
+
+            <a href="/mappingstrategy" class="tool-card">
+                <div class="tool-icon">🗺️</div>
+                <div class="tool-title">Mapping Strategy</div>
+                <div class="tool-description">Plan and visualize data mapping strategies</div>
+            </a>
+
+            <a href="/retirementcalculator" class="tool-card">
+                <div class="tool-icon">💰</div>
+                <div class="tool-title">Retirement Calculator</div>
+                <div class="tool-description">Plan your financial future and retirement goals</div>
+            </a>
+
+            <a href="/xslttransformationtester" class="tool-card">
+                <div class="tool-icon">🔄</div>
+                <div class="tool-title">XSLT Transformation Tester</div>
+                <div class="tool-description">Test and validate XSLT transformations</div>
+            </a>
+        </div>
+
+        <footer>
+            <p>© 2025 Integration Tools Hub. All tools available for your convenience. by: nbpadilla</p>
+        </footer>
+    </div>
+</body>
+</html>
