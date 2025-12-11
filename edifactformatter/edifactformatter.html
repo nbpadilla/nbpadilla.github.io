@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDIFACT Formatter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            height: 36px;
+        }
+
+        .editor-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn:active {
+            transform: translateY(0);
+        }
+
+        .icon-btn.copied {
+            background: #48bb78;
+            color: white;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Success Glow Animation */
+        @keyframes successGlow {
+            0% {
+                border-color: #48bb78;
+                box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.2);
+            }
+            100% {
+                border-color: #e2e8f0;
+                box-shadow: none;
+            }
+        }
+
+        .glow-success {
+            animation: successGlow 1.5s ease-out forwards;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 0.9em;
+        }
+
+        .info-bar {
+            background: #ebf8ff;
+            color: #2b6cb0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            display: none;
+            border-left: 4px solid #4299e1;
+        }
+
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 EDIFACT Formatter</h1>
+        <p class="subtitle">Paste your raw EDIFACT message below to format it segment by segment.</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="info-bar" id="infoBar"></div>
+
+        <div class="editor-container">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <span class="editor-title">Input</span>
+                </div>
+                <textarea id="input" placeholder="Paste your EDIFACT string here (e.g., UNB+UNOC:3+...'UNH+...)"></textarea>
+            </div>
+
+            <div class="editor-section">
+                <div class="editor-header">
+                    <span class="editor-title">Output</span>
+                    <div class="header-actions">
+                        <button class="icon-btn" onclick="clearFields()" title="Clear">🗑️</button>
+                        <button class="icon-btn" onclick="copyToClipboard()" title="Copy" id="copyBtn">📋</button>
+                    </div>
+                </div>
+                <textarea id="output" placeholder="Formatted output will appear here..." readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('input');
+        const outputField = document.getElementById('output');
+        const errorMsg = document.getElementById('errorMessage');
+        const infoBar = document.getElementById('infoBar');
+        let debounceTimer;
+
+        // Auto-format listener
+        inputField.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(formatEDIFACT, 500); 
+        });
+
+        function formatEDIFACT() {
+            const rawInput = inputField.value;
+
+            // Reset states
+            errorMsg.style.display = 'none';
+            infoBar.style.display = 'none';
+            outputField.classList.remove('glow-success');
+
+            if (!rawInput.trim()) {
+                outputField.value = '';
+                return;
+            }
+
+            try {
+                // Remove existing newlines to treat as a single stream first
+                const cleanInput = rawInput.replace(/[\r\n]+/g, '');
+                
+                let formatted = '';
+                let terminator = "'"; // Default segment terminator
+                let releaseChar = "?"; // Default release character
+                let detectedUNA = false;
+
+                // Check for UNA header to set custom delimiters
+                // Standard UNA format: UNA:+.? ' 
+                // Index 0-2: UNA
+                // Index 3: Component data element separator
+                // Index 4: Data element separator
+                // Index 5: Decimal notation
+                // Index 6: Release character
+                // Index 7: Reserved (often space)
+                // Index 8: Segment terminator
+                if (cleanInput.startsWith('UNA') && cleanInput.length >= 9) {
+                    releaseChar = cleanInput.charAt(6);
+                    terminator = cleanInput.charAt(8);
+                    detectedUNA = true;
+                    
+                    infoBar.textContent = `Detected UNA header. Using Terminator: [${terminator}] and Release Char: [${releaseChar}]`;
+                    infoBar.style.display = 'block';
+                }
+
+                let escapeMode = false;
+                
+                for (let i = 0; i < cleanInput.length; i++) {
+                    const char = cleanInput[i];
+                    formatted += char;
+
+                    if (escapeMode) {
+                        // Previous char was a release char, so this char is literal.
+                        // Turn off escape mode.
+                        escapeMode = false;
+                    } else {
+                        if (char === releaseChar) {
+                            escapeMode = true;
+                        } else if (char === terminator) {
+                            // Found a terminator that wasn't escaped, add newline
+                            formatted += '\n';
+                        }
+                    }
+                }
+
+                outputField.value = formatted;
+                triggerSuccessGlow();
+
+            } catch (error) {
+                showError('An error occurred while parsing the EDIFACT message.');
+            }
+        }
+
+        function triggerSuccessGlow() {
+            outputField.classList.remove('glow-success');
+            void outputField.offsetWidth; // Trigger reflow
+            outputField.classList.add('glow-success');
+        }
+
+        function copyToClipboard() {
+            if (!outputField.value) return;
+
+            outputField.select();
+            document.execCommand('copy');
+
+            const copyBtn = document.getElementById('copyBtn');
+            
+            copyBtn.classList.add('copied');
+            copyBtn.textContent = '✓';
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.textContent = '📋';
+            }, 2000);
+        }
+
+        function clearFields() {
+            inputField.value = '';
+            outputField.value = '';
+            errorMsg.style.display = 'none';
+            infoBar.style.display = 'none';
+            outputField.classList.remove('glow-success');
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
