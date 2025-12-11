@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML/JSON Beautifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            height: 36px; /* Fixed height for alignment */
+        }
+
+        .editor-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn:active {
+            transform: translateY(0);
+        }
+
+        .icon-btn.copied {
+            background: #48bb78;
+            color: white;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Success Glow Animation */
+        @keyframes successGlow {
+            0% {
+                border-color: #48bb78;
+                box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.2);
+            }
+            100% {
+                border-color: #e2e8f0;
+                box-shadow: none;
+            }
+        }
+
+        .glow-success {
+            animation: successGlow 1.5s ease-out forwards;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 XML/JSON Beautifier</h1>
+        <p class="subtitle">Paste your XML or JSON content below to automatically format it.</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="editor-container">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <span class="editor-title">Input</span>
+                </div>
+                <textarea id="input" placeholder="Paste your XML or JSON here..."></textarea>
+            </div>
+
+            <div class="editor-section">
+                <div class="editor-header">
+                    <span class="editor-title">Output</span>
+                    <div class="header-actions">
+                        <button class="icon-btn" onclick="clearFields()" title="Clear">🗑️</button>
+                        <button class="icon-btn" onclick="copyToClipboard()" title="Copy" id="copyBtn">📋</button>
+                    </div>
+                </div>
+                <textarea id="output" placeholder="Beautified output will appear here..." readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('input');
+        const outputField = document.getElementById('output');
+        const errorMsg = document.getElementById('errorMessage');
+        let debounceTimer;
+
+        // Auto-beautify listener
+        inputField.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            // Small delay to prevent flashing while typing
+            debounceTimer = setTimeout(beautify, 500); 
+        });
+
+        function beautify() {
+            const inputValue = inputField.value.trim();
+
+            // Reset states
+            errorMsg.style.display = 'none';
+            outputField.classList.remove('glow-success');
+
+            if (!inputValue) {
+                outputField.value = '';
+                return;
+            }
+
+            try {
+                let formatted = '';
+                let isSuccess = false;
+
+                // Try JSON first
+                if (inputValue.startsWith('{') || inputValue.startsWith('[')) {
+                    const parsed = JSON.parse(inputValue);
+                    formatted = JSON.stringify(parsed, null, 2);
+                    isSuccess = true;
+                }
+                // Try XML
+                else if (inputValue.startsWith('<')) {
+                    formatted = beautifyXML(inputValue);
+                    // Basic validation check for XML (ensure it's not just a partial tag)
+                    if (formatted.length > 0) isSuccess = true;
+                }
+                else {
+                    // Try to parse as JSON anyway just in case whitespace misled us
+                    try {
+                        const parsed = JSON.parse(inputValue);
+                        formatted = JSON.stringify(parsed, null, 2);
+                        isSuccess = true;
+                    } catch (e) {
+                        // Fallback to XML attempt
+                        try {
+                            formatted = beautifyXML(inputValue);
+                            isSuccess = true;
+                        } catch (xmlErr) {
+                            throw new Error('Format not recognized');
+                        }
+                    }
+                }
+
+                if (isSuccess) {
+                    outputField.value = formatted;
+                    triggerSuccessGlow();
+                }
+
+            } catch (error) {
+                showError('Invalid XML/JSON format detected');
+                // We keep the old output or clear it? Usually cleaner to clear if invalid.
+                // But user might want to see previous valid result. 
+                // Given the requirement "Output field to just glow green... if successful",
+                // we won't glow here.
+            }
+        }
+
+        function beautifyXML(xml) {
+            // Basic XML validation attempt
+            if (!xml.includes('<') || !xml.includes('>')) {
+                 throw new Error('Invalid XML');
+            }
+
+            const PADDING = '  ';
+            const reg = /(>)(<)(\/*)/g;
+            let formatted = '';
+            let pad = 0;
+
+            xml = xml.replace(reg, '$1\n$2$3');
+            
+            const lines = xml.split('\n');
+            
+            lines.forEach((node, index) => {
+                let indent = 0;
+                if (node.match(/.+<\/\w[^>]*>$/)) {
+                    indent = 0;
+                } else if (node.match(/^<\/\w/) && pad > 0) {
+                    pad -= 1;
+                } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                    indent = 1;
+                } else {
+                    indent = 0;
+                }
+
+                formatted += PADDING.repeat(pad) + node + '\n';
+                pad += indent;
+            });
+
+            return formatted.trim();
+        }
+
+        function triggerSuccessGlow() {
+            // Remove class and re-add to restart animation if triggered rapidly
+            outputField.classList.remove('glow-success');
+            void outputField.offsetWidth; // Trigger reflow
+            outputField.classList.add('glow-success');
+        }
+
+        function copyToClipboard() {
+            if (!outputField.value) return;
+
+            outputField.select();
+            document.execCommand('copy');
+
+            const copyBtn = document.getElementById('copyBtn');
+            const originalText = copyBtn.textContent;
+            
+            copyBtn.classList.add('copied');
+            copyBtn.textContent = '✓';
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.textContent = '📋';
+            }, 2000);
+        }
+
+        function clearFields() {
+            inputField.value = '';
+            outputField.value = '';
+            errorMsg.style.display = 'none';
+            outputField.classList.remove('glow-success');
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
