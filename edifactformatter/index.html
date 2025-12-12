@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDIFACT Formatter</title>
+    <title>EDIFACT & X12 Formatter</title>
     <style>
         * {
             margin: 0;
@@ -156,7 +156,20 @@
             font-size: 0.85em;
             display: none;
             border-left: 4px solid #4299e1;
+            font-family: 'Segoe UI', sans-serif;
         }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .badge-edifact { background: #4299e1; color: white; }
+        .badge-x12 { background: #805ad5; color: white; }
 
         @media (max-width: 768px) {
             .editor-container {
@@ -175,8 +188,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>📦 EDIFACT Formatter</h1>
-        <p class="subtitle">Paste your raw EDIFACT message below to format it segment by segment.</p>
+        <h1>📦 EDI Formatter</h1>
+        <p class="subtitle">Paste your raw <strong>EDIFACT</strong> or <strong>X12</strong> message below to format it segment by segment.</p>
         
         <div class="error-message" id="errorMessage"></div>
         <div class="info-bar" id="infoBar"></div>
@@ -186,7 +199,7 @@
                 <div class="editor-header">
                     <span class="editor-title">Input</span>
                 </div>
-                <textarea id="input" placeholder="Paste your EDIFACT string here (e.g., UNB+UNOC:3+...'UNH+...)"></textarea>
+                <textarea id="input" placeholder="Paste your EDI string here (e.g., ISA*... or UNB+...)"></textarea>
             </div>
 
             <div class="editor-section">
@@ -212,10 +225,10 @@
         // Auto-format listener
         inputField.addEventListener('input', () => {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(formatEDIFACT, 500); 
+            debounceTimer = setTimeout(formatInput, 500); 
         });
 
-        function formatEDIFACT() {
+        function formatInput() {
             const rawInput = inputField.value;
 
             // Reset states
@@ -231,56 +244,112 @@
             try {
                 // Remove existing newlines to treat as a single stream first
                 const cleanInput = rawInput.replace(/[\r\n]+/g, '');
-                
                 let formatted = '';
-                let terminator = "'"; // Default segment terminator
-                let releaseChar = "?"; // Default release character
-                let detectedUNA = false;
 
-                // Check for UNA header to set custom delimiters
-                // Standard UNA format: UNA:+.? ' 
-                // Index 0-2: UNA
-                // Index 3: Component data element separator
-                // Index 4: Data element separator
-                // Index 5: Decimal notation
-                // Index 6: Release character
-                // Index 7: Reserved (often space)
-                // Index 8: Segment terminator
-                if (cleanInput.startsWith('UNA') && cleanInput.length >= 9) {
-                    releaseChar = cleanInput.charAt(6);
-                    terminator = cleanInput.charAt(8);
-                    detectedUNA = true;
-                    
-                    infoBar.textContent = `Detected UNA header. Using Terminator: [${terminator}] and Release Char: [${releaseChar}]`;
-                    infoBar.style.display = 'block';
+                // Detect Format Type
+                if (cleanInput.startsWith('ISA')) {
+                    // --- X12 Logic ---
+                    handleX12(cleanInput);
+                } else {
+                    // --- EDIFACT Logic (Default) ---
+                    handleEDIFACT(cleanInput);
                 }
 
-                let escapeMode = false;
-                
-                for (let i = 0; i < cleanInput.length; i++) {
-                    const char = cleanInput[i];
-                    formatted += char;
-
-                    if (escapeMode) {
-                        // Previous char was a release char, so this char is literal.
-                        // Turn off escape mode.
-                        escapeMode = false;
-                    } else {
-                        if (char === releaseChar) {
-                            escapeMode = true;
-                        } else if (char === terminator) {
-                            // Found a terminator that wasn't escaped, add newline
-                            formatted += '\n';
-                        }
-                    }
-                }
-
-                outputField.value = formatted;
                 triggerSuccessGlow();
 
             } catch (error) {
-                showError('An error occurred while parsing the EDIFACT message.');
+                console.error(error);
+                showError('An error occurred while parsing the message.');
             }
+        }
+
+        function handleX12(cleanInput) {
+            // X12 "ISA" segment is fixed width (usually).
+            // Structure: ISA (3) + Sep (1) + ...
+            const elementSep = cleanInput.charAt(3);
+            let terminator = '~'; // Default fallback
+            
+            // Heuristic to find Terminator
+            // 1. Try to find the start of the next segment (GS)
+            // Pattern: [Terminator]GS[ElementSep]
+            const gsPattern = 'GS' + elementSep;
+            const gsIndex = cleanInput.indexOf(gsPattern);
+
+            if (gsIndex > 0) {
+                // The character immediately before GS is the terminator
+                terminator = cleanInput.charAt(gsIndex - 1);
+            } else if (cleanInput.length >= 106) {
+                // 2. Fallback to standard fixed position (index 105 is terminator in standard 106-char ISA)
+                // We check if the char at 105 is likely a terminator (not alphanumeric)
+                const possibleTerm = cleanInput.charAt(105);
+                if (!/[A-Za-z0-9]/.test(possibleTerm)) {
+                    terminator = possibleTerm;
+                }
+            }
+
+            showInfo('X12', `Terminator: [${terminator}]`);
+
+            // X12 typically doesn't use escape characters in the same way as EDIFACT.
+            // We split by terminator and join with newlines.
+            // We use split/join to handle the global replacement easily.
+            const segments = cleanInput.split(terminator);
+            
+            // Filter out empty segments (e.g. if string ends with terminator) and join
+            formatted = segments
+                .filter(seg => seg.trim().length > 0)
+                .join(terminator + '\n')
+                .trim();
+                
+            // Ensure the last segment has a terminator if the original did
+            if (cleanInput.endsWith(terminator) && !formatted.endsWith(terminator)) {
+                 formatted += terminator;
+            }
+            
+            outputField.value = formatted;
+        }
+
+        function handleEDIFACT(cleanInput) {
+            let terminator = "'"; // Default segment terminator
+            let releaseChar = "?"; // Default release character
+            let detectedUNA = false;
+
+            // Check for UNA header to set custom delimiters
+            if (cleanInput.startsWith('UNA') && cleanInput.length >= 9) {
+                releaseChar = cleanInput.charAt(6);
+                terminator = cleanInput.charAt(8);
+                detectedUNA = true;
+            }
+
+            showInfo('EDIFACT', detectedUNA 
+                ? `UNA Header detected. Terminator: [${terminator}] Release: [${releaseChar}]`
+                : `Standard delimiters assumed. Terminator: [${terminator}] Release: [${releaseChar}]`
+            );
+
+            let formatted = '';
+            let escapeMode = false;
+            
+            for (let i = 0; i < cleanInput.length; i++) {
+                const char = cleanInput[i];
+                formatted += char;
+
+                if (escapeMode) {
+                    escapeMode = false;
+                } else {
+                    if (char === releaseChar) {
+                        escapeMode = true;
+                    } else if (char === terminator) {
+                        formatted += '\n';
+                    }
+                }
+            }
+
+            outputField.value = formatted;
+        }
+
+        function showInfo(type, message) {
+            const badgeClass = type === 'X12' ? 'badge-x12' : 'badge-edifact';
+            infoBar.innerHTML = `<span class="badge ${badgeClass}">${type}</span> ${message}`;
+            infoBar.style.display = 'block';
         }
 
         function triggerSuccessGlow() {
