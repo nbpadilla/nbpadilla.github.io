@@ -4,227 +4,362 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAP Password Decoder</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom font and basic styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px; /* Slightly narrower than the beautifier for a single column focus */
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            height: 36px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn:active {
+            transform: translateY(0);
+        }
+
+        .icon-btn.copied {
+            background: #48bb78;
+            color: white;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #f8fafc;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 25px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Success Glow Animation */
+        @keyframes successGlow {
+            0% {
+                border-color: #48bb78;
+                box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.2);
+            }
+            100% {
+                border-color: #e2e8f0;
+                box-shadow: none;
+            }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .glow-success {
+            animation: successGlow 1.5s ease-out forwards;
+        }
+
+        .shake-error {
+            animation: errorShake 0.4s ease-in-out;
+            border-color: #c53030 !important;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .status-message {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: right;
+            min-height: 20px;
+        }
+
+        .status-success { color: #48bb78; }
+        .status-error { color: #c53030; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
         }
     </style>
 </head>
-<body onload="setup()">
-    <div id="app" class="w-full max-w-lg p-6 md:p-8 bg-white shadow-2xl rounded-xl transition-all duration-300">
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">
-            Password Decryptor
-        </h1>
-        <p class="text-center text-sm text-gray-500 mb-8">
-            Replicating Java's Base64 + XOR logic (Key: 0x74, Reversed).
-        </p>
+<body>
+    <div class="container">
+        <h1>🔐 SAP Password Decoder</h1>
+        <p class="subtitle">Replicating Java's Base64 + XOR logic (Key: 0x74, Reversed).</p>
+        
+        <div class="error-message" id="globalError"></div>
 
-        <!-- Input Field -->
-        <div class="mb-6">
-            <label for="encodedInput" class="block text-sm font-medium text-gray-700 mb-2">
-                Base64 Encoded Password:
-            </label>
-            <input type="text" id="encodedInput" value=""
-                   class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out font-mono text-sm"
-                   placeholder="Enter Base64 String here...">
+        <!-- Input Section -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Base64 Encoded Password</span>
+                <button class="icon-btn" onclick="clearInput()" title="Clear Input">🗑️</button>
+            </div>
+            <input type="text" id="encodedInput" placeholder="Enter Base64 String here..." autocomplete="off">
         </div>
 
-        <!-- Decode Button -->
-        <button onclick="decodePasswordAndDisplay()"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50">
-            Decode Password
-        </button>
-        
-        <!-- Output Area -->
-        <div class="mt-8 pt-6 border-t border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                Decoded Value:
-            </h2>
-            
-            <!-- Decoded Output Container with Copy Icon -->
-            <div id="decodedOutputContainer" class="p-4 bg-gray-100 rounded-lg border border-gray-300 shadow-inner break-all text-gray-900 font-mono text-base min-h-[50px] flex items-center justify-between transition-colors duration-200">
-                <span id="decodedOutputText" class="flex-grow text-center">
-                    <!-- Result will appear here -->
-                </span>
-                <button id="copyButton" onclick="copyDecodedValue()"
-                        class="ml-3 p-2 text-gray-500 hover:text-blue-600 transition duration-150 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        title="Copy to clipboard" style="display: none;">
-                    <!-- Lucide Copy Icon -->
-                    <svg id="copyIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                    </svg>
-                    <!-- Lucide Check Icon (Hidden by default, shown on success) -->
-                    <svg id="checkIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-green-600" style="display: none;">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                </button>
+        <!-- Action Button -->
+        <button class="action-btn" onclick="decodePasswordAndDisplay()">Decode Password</button>
+
+        <!-- Output Section -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Decoded Result</span>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="copyToClipboard()" title="Copy" id="copyBtn">📋</button>
+                </div>
             </div>
-            
-            <p id="statusMessage" class="mt-4 text-sm text-center font-medium"></p>
+            <textarea id="output" placeholder="Result will appear here..." readonly></textarea>
+            <div id="statusMessage" class="status-message"></div>
         </div>
     </div>
 
     <script>
-        // Use a fixed key, as derived from the Java code (0x74)
         const XOR_KEY = 0x74; // Decimal 116
 
         /**
          * Replicates the exact Java getPassword logic: Base64 decode,
          * check prefix (byte 1), XOR with 0x74, and reverse the result.
-         * @param {string} b64String - The Base64 encoded input string.
-         * @returns {object} { success: boolean, message: string }
          */
         function decodePassword(b64String) {
             try {
-                // 1. Base64 Decode to binary string (atob handles Base64 to binary)
+                // 1. Base64 Decode to binary string
                 const binaryString = atob(b64String);
 
-                // 2. String to Uint8Array (necessary for correct byte-level XOR operations)
+                // 2. String to Uint8Array
                 const len = binaryString.length;
                 if (len === 0) {
-                    return { success: false, message: "Error: Input is empty." };
+                    return { success: false, message: "Input is empty." };
                 }
 
                 const aByteArray = new Uint8Array(len);
                 for (let i = 0; i < len; i++) {
-                    // charCodeAt gets the byte value (0-255)
                     aByteArray[i] = binaryString.charCodeAt(i);
                 }
 
-                // Java Logic Start
-                // Check if the first byte (aByteArray[0]) is 1
+                // Check prefix
                 if (aByteArray[0] !== 1) {
-                    return { success: false, message: "Error: Invalid format prefix. The first byte must be 1 (as required by the Java logic)." };
+                    return { success: false, message: "Invalid format: First byte must be 1." };
                 }
 
-                // The result array length is one less than the input array (skipping the prefix byte)
                 const resultLen = len - 1;
                 const result = new Uint8Array(resultLen);
 
                 // Decryption and Reverse Order
-                // Java loop: for (int i = 1; i < len; i++) { result[(len - 1 - i)] = ((byte)(aByteArray[i] ^ 0x74)); }
                 for (let i = 1; i < len; i++) {
                     const encryptedByte = aByteArray[i];
-                    // Apply XOR (^) with the key
                     const decryptedByte = encryptedByte ^ XOR_KEY;
-                    // Calculate the reverse index: (Total length - 1) - current index 'i'
                     const resultIndex = resultLen - i;
-                    
                     result[resultIndex] = decryptedByte;
                 }
                 
-                // 3. Bytes to String (using TextDecoder to handle byte array to string conversion)
+                // 3. Bytes to String
                 const decodedString = new TextDecoder().decode(result);
                 return { success: true, message: decodedString };
 
             } catch (e) {
-                // Handle potential Base64 decoding errors (e.g., invalid characters)
-                return { success: false, message: "Error: Invalid Base64 input string. " + e.message };
+                return { success: false, message: "Invalid Base64 string." };
             }
         }
-
-        /**
-         * Copies the decoded text value to the user's clipboard.
-         */
-        function copyDecodedValue() {
-            const decodedText = document.getElementById('decodedOutputText').textContent;
-            const copyButton = document.getElementById('copyButton');
-            const statusDiv = document.getElementById('statusMessage');
-            const copyIcon = document.getElementById('copyIcon');
-            const checkIcon = document.getElementById('checkIcon');
-
-            if (!decodedText || decodedText === 'DECODING FAILED') {
-                statusDiv.textContent = "Cannot copy: No valid password decoded.";
-                statusDiv.classList.remove('text-green-600');
-                statusDiv.classList.add('text-red-500');
-                return;
-            }
-
-            try {
-                // Create a temporary textarea to hold the text for copying
-                const tempInput = document.createElement('textarea');
-                tempInput.value = decodedText;
-                tempInput.style.position = 'absolute';
-                tempInput.style.left = '-9999px'; // Hide off-screen
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                // Execute copy command
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-
-                // Visual feedback: Change icon and message
-                copyIcon.style.display = 'none';
-                checkIcon.style.display = 'block';
-                copyButton.title = "Copied!";
-                statusDiv.textContent = "Decoded password copied to clipboard!";
-                statusDiv.classList.remove('text-red-500');
-                statusDiv.classList.add('text-green-600');
-
-                // Revert icon and message after 2 seconds
-                setTimeout(() => {
-                    checkIcon.style.display = 'none';
-                    copyIcon.style.display = 'block';
-                    copyButton.title = "Copy to clipboard";
-                    // Restore the previous success message if not in an error state
-                    const currentDecodedText = document.getElementById('decodedOutputText').textContent;
-                    if (currentDecodedText !== 'DECODING FAILED' && currentDecodedText !== '') {
-                        statusDiv.textContent = `Successfully decoded ${document.getElementById('encodedInput').value.trim().length} characters.`;
-                    }
-                }, 2000);
-
-            } catch (err) {
-                statusDiv.textContent = 'Copy failed. Please copy manually.';
-                statusDiv.classList.remove('text-green-600');
-                statusDiv.classList.add('text-red-500');
-                console.error('Copy failed: ', err);
-            }
-        }
-
 
         function decodePasswordAndDisplay() {
             const inputField = document.getElementById('encodedInput');
-            const outputContainer = document.getElementById('decodedOutputContainer');
-            const outputText = document.getElementById('decodedOutputText');
+            const outputField = document.getElementById('output');
             const statusDiv = document.getElementById('statusMessage');
-            const copyButton = document.getElementById('copyButton');
+            const globalError = document.getElementById('globalError');
+
+            // Reset UI
+            outputField.classList.remove('glow-success', 'shake-error');
+            globalError.style.display = 'none';
+            statusDiv.textContent = '';
             
             const b64String = inputField.value.trim();
+
+            if (!b64String) {
+                // If empty, just focus input and maybe shake slightly to indicate requirement
+                inputField.focus();
+                globalError.textContent = "Please enter a password to decode.";
+                globalError.style.display = 'block';
+                return;
+            }
+
             const result = decodePassword(b64String);
 
             if (result.success) {
-                outputText.textContent = result.message;
-                // Update container colors for success
-                outputContainer.classList.remove('bg-red-100', 'text-red-800');
-                outputContainer.classList.add('bg-green-100', 'text-green-800');
-                statusDiv.textContent = `Successfully decoded ${b64String.length} characters.`;
-                statusDiv.classList.remove('text-red-500');
-                statusDiv.classList.add('text-green-600');
-                copyButton.style.display = 'flex'; // Show the copy button
+                outputField.value = result.message;
+                triggerSuccessGlow(outputField);
+                statusDiv.textContent = `Successfully decoded ${result.message.length} characters.`;
+                statusDiv.className = 'status-message status-success';
             } else {
-                outputText.textContent = "DECODING FAILED";
-                // Update container colors for error
-                outputContainer.classList.remove('bg-green-100', 'text-green-800');
-                outputContainer.classList.add('bg-red-100', 'text-red-800');
-                statusDiv.textContent = result.message;
-                statusDiv.classList.remove('text-green-600');
-                statusDiv.classList.add('text-red-500');
-                copyButton.style.display = 'none'; // Hide the copy button on failure
+                outputField.value = "DECODING FAILED";
+                outputField.classList.add('shake-error');
+                globalError.textContent = result.message;
+                globalError.style.display = 'block';
+                statusDiv.textContent = 'Decoding failed.';
+                statusDiv.className = 'status-message status-error';
             }
         }
 
-        // Run the decoder once on setup with the default value
-        function setup() {
-            decodePasswordAndDisplay();
+        function triggerSuccessGlow(element) {
+            element.classList.remove('glow-success');
+            void element.offsetWidth; // Trigger reflow
+            element.classList.add('glow-success');
         }
+
+        function copyToClipboard() {
+            const outputField = document.getElementById('output');
+            if (!outputField.value || outputField.value === "DECODING FAILED") return;
+
+            outputField.select();
+            document.execCommand('copy');
+
+            const copyBtn = document.getElementById('copyBtn');
+            
+            copyBtn.classList.add('copied');
+            copyBtn.textContent = '✓';
+
+            const statusDiv = document.getElementById('statusMessage');
+            const originalStatus = statusDiv.textContent;
+            statusDiv.textContent = "Copied to clipboard!";
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.textContent = '📋';
+                statusDiv.textContent = originalStatus;
+            }, 2000);
+        }
+
+        function clearInput() {
+            document.getElementById('encodedInput').value = '';
+            document.getElementById('output').value = '';
+            document.getElementById('statusMessage').textContent = '';
+            document.getElementById('globalError').style.display = 'none';
+            document.getElementById('output').classList.remove('glow-success', 'shake-error');
+        }
+
+        // Allow pressing Enter to decode
+        document.getElementById('encodedInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                decodePasswordAndDisplay();
+            }
+        });
     </script>
 </body>
 </html>
