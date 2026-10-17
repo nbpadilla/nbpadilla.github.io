@@ -8,8 +8,26 @@
     <style>
         body { margin: 0; padding: 0; }
     </style>
+    <link rel="stylesheet" href="/assets/site.css">
+    <script src="/assets/theme.js" defer></script>
 </head>
-<body>
+<body class="site-page">
+    <nav class="site-nav" aria-label="Main navigation">
+        <a class="site-brand" href="/" aria-label="Integration Tools Hub home"><span class="site-brand-mark">IT</span>Integration Tools Hub</a>
+        <div class="site-nav-links">
+            <a href="/">Home</a>
+            <a href="/estimator/">Estimator</a>
+            <a href="/mappingstrategy/">Mapping</a>
+            <a href="/xslttransformationtester/">XSLT Tester</a>
+            <a href="/passworddecoder/">Password Decoder</a>
+            <a href="/edifactformatter/">EDI Formatter</a>
+            <a href="/xmljsonbeautifier/">XML/JSON</a>
+            <a href="/retirementcalculator/">Retirement</a>
+            <button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch to dark theme" aria-pressed="false">
+                <span data-theme-icon aria-hidden="true">🌙</span>
+            </button>
+        </div>
+    </nav>
     <div id="root"></div>
 
     <script type="module">
